@@ -104,12 +104,14 @@ sld_data <- sld %>%
     scale_y_continuous(labels = dollar)+
     scale_size(labels = dollar,range = c(1,10))+
     labs(title = "Total student's loans debt by payment type and agendy size",
-         subtitle = "Quarter: {frame_time}",
+         subtitle = "Time: {frame_time}",
          x = "Renegotation with lender [MM USD]",
          y = "Effective payments [MM USD]",
          size = "Total debt [MM USD]",
-         color="Agency size")+
-      theme(axis.text.x = element_text(angle  =90))+
+         color="Agency size",
+         caption = "Data source: Alex Albright (Federal Student Aid)\n By: Alex Bajaña @AlexBajaa5")+
+      theme(axis.text.x = element_text(angle  =90),
+            plot.caption = element_text(hjust = 0, face = "italic"))+
     facet_wrap(agency_size~.,scales = "free")  +
     transition_time(date)
   
@@ -124,3 +126,5 @@ sld_data <- sld %>%
 # Save my animation
   
   gganimate::anim_save(filename = "week_48/sld.gif", ani.width= 500, ani.height=850)
+
+  
