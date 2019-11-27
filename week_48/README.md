@@ -2,6 +2,8 @@
 
 Student loan debts are a serious fact that many of my fellows are facing, may this attempt contribute to understand this problematic and help to reach out a solutions.
 
+![](sld.gif)
+
 ## First concepts:
 
 - Consolidation means assum a new debt in order to pay the student loan
