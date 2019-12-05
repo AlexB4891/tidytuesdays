@@ -25,7 +25,10 @@ philly <- tidytuesdayR::tt_load("2019-12-03")
 # First I will check the frequiencies of violations
 # and issuing agency:
 
-# Top 10 agencies and issuing agencies
+# Top 10 violations and issuing agencies and 
+
+# Using the the map function, combined to tidy evaluation
+# the two summaries are done easily
 
 vars <- c("violation_desc","issuing_agency")
 
@@ -44,14 +47,8 @@ sum_tab <- vars %>%
         head(10)
       )
 
-names(sum_tab) %>% 
-str_split("_") %>% 
-  map(~.x %>% 
-  str_replace("desc$","description") %>% 
-    str_c(collapse = " ") %>% 
-  str_to_sentence
-  )
-
+# purrr's function pmap allow us to pass arguments in a anonymous function 
+# using the mapping logic:
 
 frecuencies <- list(
     tables = sum_tab,
@@ -74,16 +71,17 @@ frecuencies <- list(
     
   })
 
-# First I will subset the dataset to the top ten Issuing agency:
+# First I will subset the dataset to the top ten Issuing agency and 
+# violations in vectors:
 
 top_10_a <- sum_tab[["issuing_agency"]]$issuing_agency 
 top_10_v <- sum_tab[["violation_desc"]]$violation_desc 
 
 
-# Tiles:
+# Filtering the dataset by the top 10 violations a tile plot is created:
+# The idea is to show viusaly how the total fines are distributed in the agencies. 
 
 tiles <- philly$tickets %>% 
-  # filter(issuing_agency %in% top_10_a) %>% 
   group_by_at(vars) %>% 
   summarise(fine = sum(fine,na.rm=T)) %>% 
   filter(violation_desc %in% top_10_v) %>% 
@@ -103,24 +101,24 @@ tiles <- philly$tickets %>%
         )
 
 
-# Grouping plots:
+# First I group the two bar plots:
 
 plot_1 <- ggarrange(frecuencies[[1]],frecuencies[[2]])
 
+# Add the tiles:
+
 plot_2 <- ggarrange(plot_1,tiles,nrow =2)
+
+# Annotate the figure
 
 final_plot <- annotate_figure(plot_2,
                               bottom = text_grob(" Data source: Jess Streeter,  Philly Open Data \n Elaboration: Alex Bajaña @AlexBajaa5",
                                                  hjust = 1, x = 1, face = "italic", size = 10))
 
-# Adding the tiles:
+# Generate the png file:
 
 png("week_49/joint_plot.png",res = 250,units = "in",width = 20,height = 8)
 
 final_plot
 
 dev.off()
-
-    
-
-    
