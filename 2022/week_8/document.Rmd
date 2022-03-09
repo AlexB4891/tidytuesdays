@@ -1,0 +1,111 @@
+---
+title: "Untitled"
+author: "Alex Bajaña"
+date: "23/2/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+El `tidytuesday` de esta semana trata sobre los avances que han realizado los paises del mundo en el largo camino para de alcanzar la libertad. La (https://freedomhouse.org)[Freedom house] publica periodicamente la evaluación sobre en terminos de   Este documento estará dividido en las siguientes secciones:
+
+1. Discusión de las fuentes:
+
+https://freedomhouse.org/report/freedom-world/2018/democracy-crisis
+
+"The reality of globalization is that our fates are interlinked."
+
+https://freedomhouse.org/article/q-10-years-decline-global-freedom
+
+2. Lectura de los datos y análisis exploratorio
+
+3. Gráfico: En cada región separa por "Least developed country" y plotear en los paises el indicador con gradiente.
+
+4. Exportar el gráfico con dimensiones adecuadas 
+
+5. Escribir la descripción y publicar en twitter
+
+6. Comentario de como me sentí haciendolo
+
+```{r}
+library(timeR)
+# Create a timer object,precision default to s(second)
+my_timer <- createTimer()
+
+# start timing for an event
+my_timer$start("Lectura articulo 1")
+my_timer$stop("Lectura articulo 1")
+
+#start timing for another event
+my_timer$start("Lectura de datos")
+```
+
+Para este análisis vamos a emplear las siguientes librerias:
+
+```{r}
+
+library(tidyverse)
+library(cowplot)
+library(scales)
+library(flextable)
+
+```
+Vamos a realizar algunos resumenes para revisar la data:
+
+```{r}
+
+freedom_index_data <- tidytuesdayR::tt_load('2022-02-22')
+
+data_set <- freedom_index_data$freedom
+
+brieff_summary <- data_set %>% 
+  summarise(
+    across(c(country,Status,Region_Name),
+           list(distinct = n_distinct),.names = "{.fn}-{.col}"),
+    across(c(year,CL,PR,Region_Code,is_ldc),
+           list(min = ~min(.x),
+                max = ~max(.x)),.names = "{.fn}-{.col}")
+  ) %>% 
+  pivot_longer(cols = everything(),
+               names_to = "var",values_to = "values")  %>% 
+  separate(col = var,into = c("stat","var"),sep = "-") %>% 
+  pivot_wider(names_from = "stat",values_from = "values") %>% 
+  unnest()
+
+
+  flextable(data = brieff_summary)
+
+```
+
+
+Breve reproducción del gráfico de número de paises que decaen:
+```{r}
+
+
+index_set <- 
+  data_set %>% 
+  group_by(country) %>% 
+  arrange(country,year) %>% 
+  mutate(across(.cols = c(CL, PR),
+                .fns = list(diff= ~ 7- lag(.x))))  
+
+index_set <- index_set %>% 
+  group_by(year,CL_diff,PR_diff) %>% 
+  summarise(n = n_distinct(country))
+
+  index_set %>% 
+  ungroup %>% 
+  filter(if_all(.cols = everything(),~!is.na(.))) %>%
+    filter(between(year,2006,2015)) %>% 
+ggplot() +
+geom_area(mapping = aes(x = year,y = n,fill = index_change),position = "dodge",alpha = 0.6)  
+
+# stop timing for the events
+my_timer$stop("Lectura de datos")
+
+getTimer(my_timer)
+```
+
+
