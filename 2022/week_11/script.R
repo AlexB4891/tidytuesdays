@@ -4,14 +4,15 @@ library(patchwork)
 library(scales)
 library(showtext)
 library(ggpubr)
+library(ggforce)
 
-Sys.setlocale("LC_ALL","English")
+# Sys.setlocale("LC_ALL","English")
 
 font_add_google(name = "Fredoka", family = "fred")
 
 showtext_auto()
 
-tuesdata <- tidytuesdayR::tt_load(2022, week = 11)
+tuesdata <- tidytuesdayR::tt_load("2022-03-15")
 
 cran_data <- tuesdata$cran
 
@@ -80,6 +81,8 @@ cran_list_l <- cran_list %>%
     return(completa)
   })
 
+cran_list_l$purrr
+
 cran_list <- cran_list_l %>% 
   reduce(bind_rows)
 
@@ -88,9 +91,10 @@ cran_list <- cran_list %>%
   group_by(date_f,indicador) %>% 
   summarise(packages = n_distinct(package)) %>% 
   filter(date_f >= ymd("2004-01-01")) %>% 
-  arrange(date_f) %>% 
-  mutate(repositorio = cumsum(packages))
+  arrange(date_f) 
 
+cran_list <- cran_list %>% 
+  mutate(indicador = str_replace(indicador,"conbination","combination"))
 
 
 
@@ -98,15 +102,15 @@ cran_list <- cran_list %>%
 
 plot_1 <- cran_list %>% 
   ggplot() +
-  geom_area(aes(x = date_f,y = repositorio,fill = indicador),position = "stack") +
-  geom_point(mapping = aes(x = ymd("2015-09-01"),y = 1000,size = 2),show.legend = FALSE) +
+  geom_area(aes(x = date_f,y = packages,fill = indicador),position = "stack") +
+  geom_point(mapping = aes(x = ymd("2015-09-01"),y = 6000),size = 0.4,show.legend = FALSE) +
   scale_y_continuous(labels = number) + 
   labs(title = "(A) Evolution of the numer of packages")
 
 
 plot_2 <- cran_list %>% 
   ggplot() +
-  geom_col(aes(x = date_f,y = repositorio,fill = indicador),position = "fill") +
+  geom_col(aes(x = date_f,y = packages,fill = indicador),position = "fill") +
   scale_y_continuous(labels = percent) + 
   labs(title = "(B) Composition of the CRAN repository")
 
@@ -116,7 +120,7 @@ message <- str_c("In september 2015 purrr, my favorite package was uploaded",
 
 
 
-text_grob <- ggpubr::text_grob(label = message,size = 20,family = "fred",lineheight = 1)
+# text_grob <- ggpubr::text_grob(label = message,size = 10,family = "fred",lineheight = 0.4)
 
 
 plot_1 <- plot_1 +
@@ -135,11 +139,12 @@ patch <- plot_1 + plot_2 +
   theme_minimal() +
   theme(axis.title = element_blank(),
         legend.position = "bottom",
-        text = element_text(family = "fred",size = 20),
+        legend.text = element_text(family = "fred",size = 15),
+        axis.text  = element_text(family = "fred",size = 20),
         plot.title = element_text(family = "fred",size = 25),
         legend.title = element_blank()) 
 
-ggsave(plot = patch,filename = "2022/week_11/tt_cran_repository.png")
+ggsave(plot = patch,filename = "2022/week_11/tt_cran_repository.png",bg = "white")
 
 
 
