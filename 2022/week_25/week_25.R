@@ -43,5 +43,5 @@ plot_mapa <- ggplot(data = plot_mapa,
         plot.background = element_rect(fill = "white")) 
 
 
-ggsave(filename = )
+ggsave(filename = "2022/week_25/tt_21062022.png",plot = plot_mapa)
 
